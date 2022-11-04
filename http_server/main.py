@@ -17,8 +17,22 @@ def default_handler(server: HTTPServer, request: HTTPRequest, response: HTTPResp
 
 
 def task2_data_handler(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
-    # TODO: Task 2: Serve static content based on request URL (20%)
-    pass
+    from os.path import exists, getsize
+    path = request.request_target[1:]  # remove leading '/' for relative path
+    if exists(path):
+        response.status_code, response.reason = 200, 'OK'
+        mimetype, _ = mimetypes.guess_type(path)
+        if mimetype:
+            response.add_header('Content-Type', mimetype)
+        response.add_header('Content-Length', str(getsize(path)))
+        if request.method == 'GET':
+            with open(path, 'rb') as f:
+                response.body = f.read()
+    else:
+        response.status_code, response.reason = 404, 'Not Found'
+        response.add_header('Content-Length', '0')
+
+    response.write_all()
 
 
 def task3_json_handler(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
