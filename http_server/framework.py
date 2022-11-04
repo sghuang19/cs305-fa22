@@ -80,8 +80,15 @@ class HTTPResponse:
         set status_line, and write status_line, headers and message body (if exists) into self.socket
         :return:
         """
-        # TODO: Task1, construct response from fields and write binary data to socket
-        pass
+        status_line = f"{self.http_version} {self.status_code} {self.reason}\r\n"
+        headers = ''
+        for header in self.headers:
+            headers += f"{header.name}: {header.value}\r\n"
+
+        self.socket.send(status_line.encode())
+        self.socket.send(headers.encode())
+        self.socket.send(b'\r\n')
+        self.socket.send(self.body)
 
     def add_header(self, name: str, value: str):
         self.headers.append(HTTPHeader(name, value))
