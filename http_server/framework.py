@@ -43,7 +43,13 @@ class HTTPRequest:
 
         :return:
         """
-        # TODO: Task1, read from socket and fill HTTPRequest object fields
+        self.buffer = self.socket.recv(8192)
+        lines = self.buffer.partition(b'\r\n\r\n')[0].decode().split('\r\n')
+        self.method, self.request_target, self.http_version = lines.pop(0).split(' ')
+        for line in lines:
+            name, value = line.split(':', 1)
+            self.headers.append(HTTPHeader(name, value.strip()))
+        self.body_length = int(self.get_header('Content-Length') or 0)
 
         # Debug: print http request
         print(f"{self.method} {self.request_target} {self.http_version}")
@@ -103,7 +109,6 @@ class HTTPServer:
         self.listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listen_socket.bind((self.listen_addr, self.listen_port))
         self.router: List[Route] = list()
-        # Task 3: Store POST data in this bucket.
         self.task3_data: str = ""
         # Task 5: Session Bucket
         self.session: Dict[str, Any] = dict()
