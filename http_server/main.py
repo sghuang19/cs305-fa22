@@ -36,17 +36,20 @@ def task2_data_handler(server: HTTPServer, request: HTTPRequest, response: HTTPR
 
 
 def task3_json_handler(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
-    # TODO: Task 3: Handle POST Request (20%)
     response.status_code, response.reason = 200, 'OK'
     if request.method == 'POST':
         binary_data = request.read_message_body()
         obj = json.loads(binary_data)
-        # TODO: Task 3: Store data when POST
-        pass
+        server.task3_data = obj['data']
     else:
         obj = {'data': server.task3_data}
-        return_binary = json.dumps(obj).encode()
-        pass
+        response.body = json.dumps(obj).encode()
+        response.add_header('Content-Type', 'application/json')
+        response.add_header('Content-Length', str(len(response.body)))
+    if request.method == 'HEAD':
+        response.body = b''
+
+    response.write_all()
 
 
 def task4_url_redirection(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
