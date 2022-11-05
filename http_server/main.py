@@ -101,10 +101,11 @@ def task5_cookie_getimage(server: HTTPServer, request: HTTPRequest, response: HT
 def task5_session_login(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
     obj = json.loads(request.read_message_body())
     if obj["username"] == 'admin' and obj['password'] == 'admin':
+        response.status_code, response.reason = 200, 'OK'
         session_key = random_string()
         while session_key in server.session:
             session_key = random_string()
-        response.status_code, response.reason = 200, 'OK'
+        server.session[session_key] = None
         response.add_header('Set-Cookie', f'SESSION_KEY={session_key}')
     else:
         response.status_code, response.reason = 403, 'Forbidden'
@@ -113,8 +114,29 @@ def task5_session_login(server: HTTPServer, request: HTTPRequest, response: HTTP
 
 
 def task5_session_getimage(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
-    # TODO: Task 5: Cookie, Step 2 Access Protected Resources
-    pass
+    cookie_str = request.get_header('Cookie')
+    if cookie_str:
+        # a hack converting cookie string to dict
+        cookie_str = cookie_str.replace('; ', '", "').replace('=', '": "')
+        cookies = json.loads('{"' + cookie_str + '"}')
+    else:
+        cookies = {}
+
+    if cookies.get('SESSION_KEY') in server.session:
+        from os.path import getsize
+        response.status_code, response.reason = 200, 'OK'
+        path = 'data/test.jpg'  # assume file exists
+        mimetype, _ = mimetypes.guess_type(path)
+        if mimetype:
+            response.add_header('Content-Type', mimetype)
+        response.add_header('Content-Length', str(getsize(path)))
+        if request.method == 'GET':
+            with open(path, "rb") as f:
+                response.body = f.read()
+    else:
+        response.status_code, response.reason = 403, 'Forbidden'
+
+    response.write_all()
 
 
 YOUR_STUDENT_ID = 11912309
