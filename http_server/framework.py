@@ -58,8 +58,8 @@ class HTTPRequest:
         print()
 
     def read_message_body(self) -> bytes:
-        # TODO: Task 3: complete read_message_body here
-        pass
+        # assume read_headers() has been called
+        return self.buffer.partition(b'\r\n\r\n')[2][:self.body_length]
 
     def get_header(self, key: str) -> Union[str, None]:
         for h in self.headers:
