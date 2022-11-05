@@ -99,15 +99,17 @@ def task5_cookie_getimage(server: HTTPServer, request: HTTPRequest, response: HT
 
 
 def task5_session_login(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
-    # TODO: Task 5: Cookie, Step 1 Login Authorization
     obj = json.loads(request.read_message_body())
     if obj["username"] == 'admin' and obj['password'] == 'admin':
         session_key = random_string()
         while session_key in server.session:
             session_key = random_string()
-        pass
+        response.status_code, response.reason = 200, 'OK'
+        response.add_header('Set-Cookie', f'SESSION_KEY={session_key}')
     else:
         response.status_code, response.reason = 403, 'Forbidden'
+
+    response.write_all()
 
 
 def task5_session_getimage(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
