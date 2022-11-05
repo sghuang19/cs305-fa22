@@ -65,12 +65,12 @@ def task5_test_html(server: HTTPServer, request: HTTPRequest, response: HTTPResp
 
 
 def task5_cookie_login(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
-    # TODO: Task 5: Cookie, Step 1 Login Authorization
     obj = json.loads(request.read_message_body())
-    if obj["username"] == 'admin' and obj['password'] == 'admin':
-        pass
+    if obj['username'] == 'admin' and obj['password'] == 'admin':
+        response.status_code, response.reason = 200, 'OK'
+        response.add_header('Set-Cookie', 'Authenticated=yes')
     else:
-        pass
+        response.status_code, response.reason = 403, 'Forbidden'
 
 
 def task5_cookie_getimage(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
