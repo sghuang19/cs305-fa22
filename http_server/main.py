@@ -74,8 +74,28 @@ def task5_cookie_login(server: HTTPServer, request: HTTPRequest, response: HTTPR
 
 
 def task5_cookie_getimage(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
-    # TODO: Task 5: Cookie, Step 2 Access Protected Resources
-    pass
+    cookie_str = request.get_header('Cookie')
+    if cookie_str:
+        # a hack converting cookie string to dict
+        cookie_str = cookie_str.replace('; ', '", "').replace('=', '": "')
+        cookies = json.loads('{"' + cookie_str + '"}')
+    else:
+        cookies = {}
+
+    if cookies.get('Authenticated') == 'yes':
+        response.status_code, response.reason = 200, 'OK'
+        path = 'data/test.jpg'  # assume file exists
+        mimetype, _ = mimetypes.guess_type(path)
+        if mimetype:
+            response.add_header('Content-Type', mimetype)
+        with open(path, "rb") as f:
+            if request.method == 'GET':
+                response.body = f.read()
+            response.add_header('Content-Length', str(f.tell()))
+    else:
+        response.status_code, response.reason = 403, 'Forbidden'
+
+    response.write_all()
 
 
 def task5_session_login(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
