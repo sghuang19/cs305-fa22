@@ -53,8 +53,9 @@ def task3_json_handler(server: HTTPServer, request: HTTPRequest, response: HTTPR
 
 
 def task4_url_redirection(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
-    # TODO: Task 4: HTTP 301 & 302: URL Redirection (10%)
-    pass
+    response.status_code, response.reason = 302, 'Found'
+    response.add_header('Location', f'http://{server.host}/data/index.html')
+    response.write_all()
 
 
 def task5_test_html(server: HTTPServer, request: HTTPRequest, response: HTTPResponse):
