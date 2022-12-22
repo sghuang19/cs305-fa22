@@ -143,26 +143,41 @@ class ICMPSocket:
         return pack('!BBHHH', type, code, checksum, id, sequence) + payload
 
     def _parse_reply(self, packet, source, current_time):
-        sequence = 0
-        type = 0
-        code = 0
-        # TODO:
-        # Parse an ICMP reply from bytes.
-        #
-        # Read sequence, type and code from packet 
-        #
-        # :type packet: bytes
-        # :param packet: IP packet with ICMP as its payload
-        #
-        # :rtype: ICMPReply
-        # :returns: an ICMPReply parsed from packet
+        """
+        Parse an ICMP reply from bytes.
+
+        Read sequence, type and code from packet
+
+        :type packet: bytes
+        :param packet: IP packet with ICMP as its payload
+
+        :rtype: ICMPReply
+        :returns: an ICMPReply parsed from packet
+        """
+        type, code = unpack(
+            '!BB', packet[self._ICMP_HEADER_OFFSET:self._ICMP_CHECKSUM_OFFSET]
+        )
+        if type in {
+            self._ICMP_ECHO_REPLY, self._ICMP_ECHO_REQUEST,
+            13, 14, 15, 16  # timestamp (reply), information request/reply
+        }:
+            id, sequence = unpack(
+                '!HH', packet[self._ICMP_ID_OFFSET:self._ICMP_PAYLOAD_OFFSET]
+            )
+        else:
+            id_offset = self._ICMP_PAYLOAD_OFFSET + self._ICMP_ID_OFFSET
+            id, sequence = unpack('!HH', packet[id_offset:id_offset + 4])
+            sequence &= 0x1fff  # least 13 bits
+
         return ICMPReply(
             source=source,
             id=id,
             sequence=sequence,
             type=type,
             code=code,
-            time=current_time)
+            time=current_time
+        )
+
 
     def send(self, request):
         '''
