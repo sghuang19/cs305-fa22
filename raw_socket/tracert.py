@@ -12,11 +12,22 @@ MAX_HOP = 30
 
 
 def tracert(address, id=None):
+    """
+    Create ICMPRequest and send through socket, then receive and parse
+    reply, remember to modify ttl when creating ICMPRequest
+
+    :type id: int
+    :param id: The identifier of ICMP Request
+
+    :rtype: Host[]
+    :returns: ping result
+
+    Hint: use ICMPSocket.send() to send packet and use ICMPSocket.receive()
+    to receive
+    """
     if is_hostname(address):
         address = resolve(address)[0]
-
     sock = ICMPSocket()
-
     id = id or unique_identifier()
     ttl = 1
     host_reached = False
@@ -27,32 +38,28 @@ def tracert(address, id=None):
         packets_sent = 0
         rtts = []
 
-        ###############################
-        # TODO:
-        # Create ICMPRequest and send through socket,
-        # then receive and parse reply,
-        # remember to modify ttl when creating ICMPRequest
-        #
-        #
-        # :type id: int
-        # :param id: The identifier of ICMP Request
-        #
-        # :rtype: Host[]
-        # :returns: ping result
-        #
-        # Hint: use ICMPSocket.send() to send packet and use ICMPSocket.receive() to receive
-        #
-        ################################
+        for i in range(PING_COUNT):
+            request = ICMPRequest(address, id, i, ttl=ttl)
+            time_sent = time()
+            sock.send(request)
+            packets_sent += 1
+            try:
+                reply = sock.receive(request, timeout=PING_TIMEOUT)
+                rtts.append((reply.time - request.time) * 1e3)
+                sleep(PING_INTERVAL)
+            except TimeoutExceeded:
+                pass
 
         if reply:
+            if reply.type == 0:
+                host_reached = True
             hop = Hop(
                 address=reply.source,
                 packets_sent=packets_sent,
                 rtts=rtts,
-                distance=ttl)
-
+                distance=ttl
+            )
             hops.append(hop)
-
         ttl += 1
 
     return hops
