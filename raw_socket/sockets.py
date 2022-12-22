@@ -78,23 +78,24 @@ class ICMPSocket:
             ttl)
 
     def _checksum(self, data):
-        sum = 0
+        """
+        Compute the checksum of an ICMP packet. Checksums are used to
+        verify the integrity of packets.
 
-        # TODO:
-        # Compute the checksum of an ICMP packet. Checksums are used to
-        # verify the integrity of packets.
-        #
-        # :type data: bytes
-        # :param data: The data you are going to send, calculate checksum
-        # according to this.
-        #
-        # :rtype: int
-        # :returns: checksum calculated from data
-        #
-        # Hint: if the length of data is even, add a b'\x00' to the end of data
-        # according to RFC
+        :type data: bytes
+        :param data: The data you are going to send, calculate checksum
+        according to this.
 
-        return sum
+        :rtype: int
+        :returns: checksum calculated from data
+
+        Hint: if the length of data is even, add a b'\x00' to the end of data
+        according to RFC
+        """
+        padding = b'\x00' if len(data) & 1 else b''
+        checksum = sum(unpack(f'!{len(data + padding) >> 1}H', data + padding))
+        checksum = (checksum & 0xffff) + (checksum >> 16)  # deferred carries
+        return 0xffff - checksum
 
     def _check_data(self, data, checksum):
 
