@@ -118,21 +118,29 @@ class ICMPSocket:
         return not self._checksum(data + padding + checksum.to_bytes(2, 'big'))
 
     def _create_packet(self, request: ICMPRequest):
+        """
+        Build an ICMP packet from an ICMPRequest, you can get a sequence number
+        and a payload.
+
+        This method returns the newly created ICMP header concatenated to the
+        payload passed in parameters.
+
+        tips: the 'checksum' in ICMP header needs to be calculated and updated
+        :rtype: bytes
+        :returns: an ICMP header+payload in bytes format
+        """
+        type = self._ICMP_ECHO_REQUEST
+        code = 0
+        checksum = 0
         id = request.id
         sequence = request.sequence
         payload = request.payload
-        checksum = 0
-        # TODO:
-        # Build an ICMP packet from an ICMPRequest, you can get a sequence number and
-        # a payload.
-        #
-        # This method returns the newly created ICMP header concatenated
-        # to the payload passed in parameters.
-        #
-		# tips: the 'checksum' in ICMP header needs to be calculated and updated
-        # :rtype: bytes
-        # :returns: an ICMP header+payload in bytes format
-        return None
+
+        checksum = self._checksum(
+            pack('!BBHH', type, code, id, sequence) +  # checksum ignored
+            payload
+        )
+        return pack('!BBHHH', type, code, checksum, id, sequence) + payload
 
     def _parse_reply(self, packet, source, current_time):
         sequence = 0
